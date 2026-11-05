@@ -1,0 +1,29 @@
+# Render Blueprint: one always-on web service with a persistent disk for SQLite.
+# Create it from the Render Dashboard (New > Blueprint) or with the "Deploy to
+# Render" link in DEPLOY.md. Render asks for ADMIN_EMAIL and ADMIN_PASSWORD once.
+services:
+  - type: web
+    name: concurs-biblic
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter            # always-on; Free instances cannot attach a disk
+    region: frankfurt
+    numInstances: 1          # the app must run as a single instance (see README)
+    healthCheckPath: /api/v1/health
+    disk:
+      name: quiz-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD   # at least 12 characters; used only for the first start
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: DATABASE_URL
+        value: sqlite:////data/quiz.sqlite3
+      # The service's own https://<name>.onrender.com origin is allowed automatically.
+      # For a custom domain, add APP_ORIGINS in the Dashboard listing every origin,
+      # e.g. https://concurs-biblic.onrender.com,https://concurs.example.ro
